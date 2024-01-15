@@ -1,4 +1,4 @@
-﻿<#
+<#
 .NOTES
     Name: Get-TeamsStatus.ps1
     Author: Danny de Vries
@@ -48,12 +48,19 @@ If($null -ne $SetStatus){
 # Start monitoring the Teams logfile when no parameter is used to run the script
 DO {
 # Get Teams Logfile and last icon overlay status
-$TeamsStatus = Get-Content -Path $env:APPDATA"\Microsoft\Teams\logs.txt" -Tail 1000 | Select-String -Pattern `
-  'Setting the taskbar overlay icon -',`
-  'StatusIndicatorStateService: Added' | Select-Object -Last 1
+
+$Directory = "C:\Users\gwhite\AppData\Local\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\Logs"
+
+$TeamsLogFile = Get-ChildItem -Attributes !Directory "$Directory\MSTEAMS_*.log" | Sort-Object -Descending -Property LastWriteTime | select -First 1
+
+Write-Host $Directory
+Write-Host $TeamsLogFile
+
+$TeamsStatus = Get-Content -Path $TeamsLogFile -Tail 1000 | Select-String -Pattern `
+  'Received Action: UserPresenceAction:' | Select-Object -Last 1
 
 # Get Teams Logfile and last app update deamon status
-$TeamsActivity = Get-Content -Path $env:APPDATA"\Microsoft\Teams\logs.txt" -Tail 1000 | Select-String -Pattern `
+$TeamsActivity = Get-Content -Path $TeamsLogFile -Tail 1000 | Select-String -Pattern `
   'Resuming daemon App updates',`
   'Pausing daemon App updates',`
   'SfB:TeamsNoCall',`
@@ -62,63 +69,44 @@ $TeamsActivity = Get-Content -Path $env:APPDATA"\Microsoft\Teams\logs.txt" -Tail
   'name: desktop_call_state_change_send, isOngoing' | Select-Object -Last 1
 
 # Get Teams application process
-$TeamsProcess = Get-Process -Name Teams -ErrorAction SilentlyContinue
+$TeamsProcess = Get-Process -Name ms-teams -ErrorAction SilentlyContinue
 
 # Check if Teams is running and start monitoring the log if it is
 If ($null -ne $TeamsProcess) {
     If($TeamsStatus -eq $null){ }
-    ElseIf ($TeamsStatus -like "*Setting the taskbar overlay icon - $lgAvailable*" -or `
-        $TeamsStatus -like "*StatusIndicatorStateService: Added Available*" -or `
-        $TeamsStatus -like "*StatusIndicatorStateService: Added NewActivity (current state: Available -> NewActivity*") {
+    ElseIf ($TeamsStatus -like "*availability: $lgAvailable*") {
         $Status = $lgAvailable
         Write-Host $Status
     }
-    ElseIf ($TeamsStatus -like "*Setting the taskbar overlay icon - $lgBusy*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added Busy*" -or `
-            $TeamsStatus -like "*Setting the taskbar overlay icon - $lgOnThePhone*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added OnThePhone*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added NewActivity (current state: Busy -> NewActivity*") {
+    ElseIf ($TeamsStatus -like "*availability: $lgBusy*") {
         $Status = $lgBusy
         Write-Host $Status
     }
-    ElseIf ($TeamsStatus -like "*Setting the taskbar overlay icon - $lgAway*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added Away*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added NewActivity (current state: Away -> NewActivity*") {
+    ElseIf ($TeamsStatus -like "*availability: $lgAway*") {
         $Status = $lgAway
         Write-Host $Status
     }
-    ElseIf ($TeamsStatus -like "*Setting the taskbar overlay icon - $lgBeRightBack*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added BeRightBack*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added NewActivity (current state: BeRightBack -> NewActivity*") {
+    ElseIf ($TeamsStatus -like "*availability: $lgBeRightBack*") {
         $Status = $lgBeRightBack
         Write-Host $Status
     }
-    ElseIf ($TeamsStatus -like "*Setting the taskbar overlay icon - $lgDoNotDisturb *" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added DoNotDisturb*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added NewActivity (current state: DoNotDisturb -> NewActivity*") {
+    ElseIf ($TeamsStatus -like "*availability: $lgDoNotDisturb*") {
         $Status = $lgDoNotDisturb
         Write-Host $Status
     }
-    ElseIf ($TeamsStatus -like "*Setting the taskbar overlay icon - $lgFocusing*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added Focusing*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added NewActivity (current state: Focusing -> NewActivity*") {
+    ElseIf ($TeamsStatus -like "*availability: $lgFocusing*") {
         $Status = $lgFocusing
         Write-Host $Status
     }
-    ElseIf ($TeamsStatus -like "*Setting the taskbar overlay icon - $lgPresenting*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added Presenting*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added NewActivity (current state: Presenting -> NewActivity*") {
+    ElseIf ($TeamsStatus -like "*availability: $lgPresenting*") {
         $Status = $lgPresenting
         Write-Host $Status
     }
-    ElseIf ($TeamsStatus -like "*Setting the taskbar overlay icon - $lgInAMeeting*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added InAMeeting*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added NewActivity (current state: InAMeeting -> NewActivity*") {
+    ElseIf ($TeamsStatus -like "*availability: $lgInAMeeting*") {
         $Status = $lgInAMeeting
         Write-Host $Status
     }
-    ElseIf ($TeamsStatus -like "*Setting the taskbar overlay icon - $lgOffline*" -or `
-            $TeamsStatus -like "*StatusIndicatorStateService: Added Offline*") {
+    ElseIf ($TeamsStatus -like "*availability: $lgOffline*") {
         $Status = $lgOffline
         Write-Host $Status
     }
