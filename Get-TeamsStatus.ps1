@@ -49,7 +49,7 @@ If($null -ne $SetStatus){
 DO {
 # Get Teams Logfile and last icon overlay status
 
-$Directory = "C:\Users\gwhite\AppData\Local\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\Logs"
+$Directory = "C:\Users\$UserName\AppData\Local\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\Logs"
 
 $TeamsLogFile = Get-ChildItem -Attributes !Directory "$Directory\MSTEAMS_*.log" | Sort-Object -Descending -Property LastWriteTime | select -First 1
 
